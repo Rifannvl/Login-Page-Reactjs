@@ -1,13 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 export default function LoginForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const togglePasswordVisibility = () => {
+    setIsPasswordVisible(!isPasswordVisible);
+  };
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+  };
 
   const navigate = useNavigate();
 
+  // useeffect untuk mengecek status login komponen pertama kali di render
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/users");
+    }
+  });
   function handleLogin(e) {
     e.preventDefault();
     // alert(`Username : ${username}\nPassword : ${password}`);
@@ -33,18 +48,19 @@ export default function LoginForm() {
     })
       .then((res) => res.json())
       .then((data) => {
-        localStorage.setItem("token", data.token);
-
         if (data.token) {
+          localStorage.setItem("token", data.token);
           // show allert
           Swal.fire({
             icon: "success",
             title: "Login Berhasilh",
             text: "Login Berhasilh",
             confirmButtonText: "OK",
-          }).then(() => {
-            // redirect to home page
-            navigate("/Users");
+          }).then((result) => {
+            if (result.isConfirmed) {
+              // redirect to home page
+              navigate("/users");
+            }
           });
         } else {
           Swal.fire({
@@ -85,12 +101,21 @@ export default function LoginForm() {
         </label>
         <input
           className="border px-2 py-1 rounded-md w-full"
-          type="password"
-          name="password"
-          id="password"
-          placeholder="Password"
+          type={isPasswordVisible ? "text" : "password"}
+          value={password}
+          onChange={handlePasswordChange}
+          placeholder="Masukkan password"
           onInput={(e) => setPassword(e.target.value)}
         />
+      </div>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={togglePasswordVisibility}
+          className="toggle-btn"
+        >
+          {isPasswordVisible ? "👁️" : "🙈"}
+        </button>
       </div>
 
       <div className="flex justify-center py-4">
